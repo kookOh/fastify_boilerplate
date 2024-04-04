@@ -1,0 +1,11 @@
+node_modules
+dist
+release
+
+.env
+
+*.local
+uploads/
+uploads/*
+*.jpg
+static/

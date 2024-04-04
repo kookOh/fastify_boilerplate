@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = "postgres://postgres.wpqashdpkwxwxozfltmf:manner%23gg%21%40%23%24@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
+  directUrl = "postgres://postgres.wpqashdpkwxwxozfltmf:manner%23gg%21%40%23%24@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
+  extensions = [pgcrypto]
+}
+
+model User {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String      @db.VarChar(255)
+  password  String?     @db.VarChar(255)
+  name      String?     @db.VarChar(255)
+  nickname  String?     @db.VarChar(255)
+  thumbURL  String?     @db.VarChar(255)
+  photoURL  String?     @db.VarChar(255)
+  birthDay  DateTime?
+  gender    String?
+  phone     String?     @db.VarChar(255)
+  verified  Boolean?
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @default(now())
+  deletedAt DateTime?
+  posts     Post[]
+  sessions  Session[]
+  sns       UserSocial?
+  orders    Order[]
+
+  @@map("TB_USER")
+}
+
+model UserSocial {
+  id            String    @id @db.Uuid
+  socialId      String
+  socialType    String
+  accessToken   String?
+  refreshToken  String?
+  identityToken String?
+  createdAt     DateTime? @default(now())
+  updatedAt     DateTime? @default(now()) @updatedAt
+  deletedAt     DateTime?
+  user          User      @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@index([socialId, socialType])
+  @@map("TB_USER_SOCIAL")
+}
+
+model Session {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now())
+  deletedAt DateTime?
+  userId    String    @db.Uuid
+  nonce     String
+  expires   DateTime
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nonce])
+  @@map("TB_SESSION")
+}
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String?
+  content     String?
+  html_content     String?
+  userId      String    @db.Uuid
+  characterId Int
+  type        String    @default("short")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime?
+  isManner    Boolean   @default(false)
+  files       File[]
+  character   Character @relation(fields: [characterId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  // orderId     String?   @unique
+  order       Order?   // @relation(fields: [orderId], references: [id])  
+
+  @@index([userId])
+  @@index([type])
+  @@map("TB_POST")
+}
+model SystemPost {
+  id        Int       @id @default(autoincrement())
+  title     String?
+  content   String?
+  type      String    @default("notice")
+  useYn     Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+  files     File[]
+
+  @@map("TB_SYS_POST")
+}
+
+model GroupCode {
+  cd    String       @id
+  name  String       @default("")
+  useYN Boolean      @default(true)
+  codes CommonCode[]
+
+  @@map("TB_GROUP_CODE")
+}
+
+model CommonCode {
+  cd        String    @id
+  name      String
+  groupCd   String
+  attr1     String?
+  attr2     String?
+  attr3     String?
+  attr4     String?
+  useYN     Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+  group     GroupCode @relation(fields: [groupCd], references: [cd])
+
+  @@index([groupCd])
+  @@map("TB_COMMON_CODE")
+}
